@@ -20,3 +20,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   updated_at    TEXT    NOT NULL,
   next_retry_at TEXT    NULL
 );
+
+CREATE TABLE IF NOT EXISTS config (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);

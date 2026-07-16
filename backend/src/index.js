@@ -17,6 +17,7 @@ import { workerStartAction } from './commands/worker.js';
 import { dlqListAction, dlqRetryAction } from './commands/dlq.js';
 import { statusAction }     from './commands/status.js';
 import { listAction }       from './commands/list.js';
+import { configGetAction, configSetAction } from './commands/config.js';
 
 program
   .name('queuectl')
@@ -78,6 +79,21 @@ program
   .description('List jobs from the queue')
   .option('-s, --state <state>', 'filter jobs by state (pending, processing, completed, failed, dead)')
   .action(listAction);
+
+// ── config command ────────────────────────────────────────────────
+const configCmd = program
+  .command('config')
+  .description('Manage queuectl configuration settings');
+
+configCmd
+  .command('get [key]')
+  .description('Retrieve all configurations or a specific key value')
+  .action(configGetAction);
+
+configCmd
+  .command('set <key> <value>')
+  .description('Set a configuration value (allowed: max-retries, backoff-base)')
+  .action(configSetAction);
 
 // Parse process.argv — Commander reads process.argv[2..] by default.
 program.parse(process.argv);

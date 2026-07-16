@@ -52,4 +52,12 @@ try {
   }
 }
 
+// Bootstrap default configurations if they don't already exist
+try {
+  db.prepare("INSERT OR IGNORE INTO config (key, value) VALUES ('max-retries', '3')").run();
+  db.prepare("INSERT OR IGNORE INTO config (key, value) VALUES ('backoff-base', '2')").run();
+} catch (err) {
+  console.error('Failed to bootstrap default configurations:', err.message);
+}
+
 export default db;

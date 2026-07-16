@@ -7,10 +7,10 @@
  * The repository stays pure: it only accepts parameters and runs queries.
  */
 
-import { CONFIG } from '../config/config.js';
 import { calculateBackoffDelay } from '../utils/backoff.js';
 import * as jobRepository from '../repositories/jobRepository.js';
 import * as dlqService   from './dlqService.js';
+import * as configService from './configService.js';
 
 /**
  * Handles a job failure by incrementing its attempt count and scheduling
@@ -27,11 +27,12 @@ export function handleFailure(job) {
   // 2. Check if attempts exceed the configured threshold.
   const maxRetries = job.max_retries !== undefined && job.max_retries !== null
     ? job.max_retries
-    : CONFIG.MAX_RETRIES;
+    : configService.getConfig('max-retries', 3);
 
   if (newAttempts <= maxRetries) {
     // Calculate exponential delay: delay = BACKOFF_BASE ^ attempts
-    const delaySeconds = calculateBackoffDelay(newAttempts, CONFIG.BACKOFF_BASE);
+    const backoffBase = configService.getConfig('backoff-base', 2);
+    const delaySeconds = calculateBackoffDelay(newAttempts, backoffBase);
     const nextRetryAt = new Date(Date.now() + delaySeconds * 1000).toISOString();
 
     // Persist the retry state in SQLite
