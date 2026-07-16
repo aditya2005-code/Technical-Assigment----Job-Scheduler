@@ -1,20 +1,5 @@
-/**
- * commands/dlq.js — CLI commands for Dead Letter Queue (DLQ)
- *
- * Responsibilities:
- *   - Parses commands for `queuectl dlq list` and `queuectl dlq retry <jobId>`.
- *   - Delegates business checks and state transitions to DlqService.
- *   - Formats outputs cleanly to stdout/stderr and sets non-zero exit codes on failure.
- *
- * Does NOT contain database queries or business state updates directly.
- */
-
 import * as dlqService from '../services/dlqService.js';
 
-/**
- * Handles `queuectl dlq list` command action.
- * Displays all dead jobs or prints a message if the DLQ is empty.
- */
 export function dlqListAction() {
   try {
     const deadJobs = dlqService.listDeadJobs();
@@ -38,12 +23,6 @@ export function dlqListAction() {
   }
 }
 
-/**
- * Handles `queuectl dlq retry <jobId>` command action.
- * Moves a dead job back to pending.
- *
- * @param {string} jobId
- */
 export function dlqRetryAction(jobId) {
   try {
     dlqService.retryDeadJob(jobId);

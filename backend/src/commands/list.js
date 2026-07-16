@@ -1,20 +1,5 @@
-/**
- * commands/list.js — CLI handler for list command
- *
- * Responsibilities:
- *   - Registers with Commander for `queuectl list`.
- *   - Parses optional `--state` option.
- *   - Calls ListService to fetch validated results.
- *   - Formats and prints jobs in a clean, padded CLI table.
- */
-
 import * as listService from '../services/listService.js';
 
-/**
- * Action handler for the `queuectl list` command.
- *
- * @param {object} options - Commander options containing optional state filter.
- */
 export function listAction(options) {
   try {
     const jobs = listService.listJobs(options.state);
@@ -31,11 +16,6 @@ export function listAction(options) {
   }
 }
 
-/**
- * Formats and prints a list of Job instances as a padded CLI table.
- *
- * @param {Job[]} jobs
- */
 function printJobsTable(jobs) {
   const colWidths = {
     id:       15,

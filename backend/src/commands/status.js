@@ -1,17 +1,5 @@
-/**
- * commands/status.js — CLI handler for status command
- *
- * Responsibilities:
- *   - Registers with Commander for `queuectl status`.
- *   - Fetches metrics from StatusService.
- *   - Prints a formatted, reader-friendly queue status report.
- */
-
 import * as statusService from '../services/statusService.js';
 
-/**
- * Action handler for the `queuectl status` command.
- */
 export function statusAction() {
   try {
     const stats = statusService.getQueueStatus();

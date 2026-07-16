@@ -1,16 +1,4 @@
 #!/usr/bin/env node
-/**
- * index.js — CLI entry point for queuectl
- *
- * WHY Commander: It handles argv parsing, help text generation, and
- * sub-command routing with minimal boilerplate. We avoid reinventing
- * that wheel here.
- *
- * WHY no business logic here: This file is the composition root —
- * it wires commands to handlers and nothing more. Keeping it thin
- * means the entire CLI can be rewired without touching any logic.
- */
-
 import { program } from 'commander';
 import { enqueueAction }    from './commands/enqueue.js';
 import { workerStartAction } from './commands/worker.js';
@@ -24,7 +12,6 @@ program
   .description('CLI job queue manager backed by SQLite')
   .version('1.0.0');
 
-// ── enqueue command ───────────────────────────────────────────────
 program
   .command('enqueue <json>')
   .description('Add a new job to the queue')
@@ -35,7 +22,6 @@ Examples:
   `)
   .action(enqueueAction);
 
-// ── worker command ────────────────────────────────────────────────
 const worker = program
   .command('worker')
   .description('Manage the job worker process');
@@ -52,7 +38,6 @@ Examples:
   `)
   .action(workerStartAction);
 
-// ── dlq command ───────────────────────────────────────────────────
 const dlq = program
   .command('dlq')
   .description('Manage the Dead Letter Queue (DLQ)');
@@ -67,20 +52,17 @@ dlq
   .description('Manually retry a dead job by resetting it to pending')
   .action(dlqRetryAction);
 
-// ── status command ────────────────────────────────────────────────
 program
   .command('status')
   .description('Display a summary of the queue status')
   .action(statusAction);
 
-// ── list command ──────────────────────────────────────────────────
 program
   .command('list')
   .description('List jobs from the queue')
   .option('-s, --state <state>', 'filter jobs by state (pending, processing, completed, failed, dead)')
   .action(listAction);
 
-// ── config command ────────────────────────────────────────────────
 const configCmd = program
   .command('config')
   .description('Manage queuectl configuration settings');
@@ -95,5 +77,4 @@ configCmd
   .description('Set a configuration value (allowed: max-retries, backoff-base)')
   .action(configSetAction);
 
-// Parse process.argv — Commander reads process.argv[2..] by default.
 program.parse(process.argv);
