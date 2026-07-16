@@ -40,10 +40,12 @@ const worker = program
 worker
   .command('start')
   .description('Start the worker polling loop')
+  .option('-c, --count <number>', 'number of worker threads to run', '1')
   .addHelpText('after', `
 Examples:
-  $ node src/index.js worker start
-  Worker started...
+  $ node src/index.js worker start --count 3
+  WorkerManager started
+  Starting 3 workers...
   `)
   .action(workerStartAction);
 
