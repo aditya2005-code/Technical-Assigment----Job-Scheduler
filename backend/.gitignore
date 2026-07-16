@@ -29,6 +29,9 @@ logs/**/*.log
 *.db
 *.db-shm
 *.db-wal
+queue.db
+queue.db-shm
+queue.db-wal
 data/
 
 # ── Build / Dist ─────────────────────────────────────────────

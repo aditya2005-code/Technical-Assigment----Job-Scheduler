@@ -69,3 +69,65 @@ export function list() {
   const rows = db.prepare('SELECT * FROM jobs ORDER BY created_at ASC').all();
   return rows.map((row) => new Job(row));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Worker methods — added in Part 2
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fetches the oldest pending job without claiming it.
+ * The caller (lockService) is responsible for atomically claiming it
+ * via markProcessing() immediately after.
+ *
+ * @returns {Job|null}
+ */
+export function getNextPendingJob() {
+  const row = db
+    .prepare("SELECT * FROM jobs WHERE state = 'pending' ORDER BY created_at ASC LIMIT 1")
+    .get();
+  return row ? new Job(row) : null;
+}
+
+/**
+ * Atomically transitions a job from pending → processing.
+ *
+ * WHY WHERE state = 'pending': This is the compare-and-swap guard.
+ * If two workers race for the same job, only the one that executes
+ * this UPDATE first will get changes = 1. The second will see
+ * changes = 0 and must skip the job, preventing double-execution.
+ *
+ * @param {string} id
+ * @returns {boolean} true if the lock was acquired, false if another
+ *                    worker already claimed it.
+ */
+export function markProcessing(id) {
+  const now  = new Date().toISOString();
+  const info = db
+    .prepare("UPDATE jobs SET state = 'processing', updated_at = ? WHERE id = ? AND state = 'pending'")
+    .run(now, id);
+  // info.changes is the number of rows actually modified.
+  return info.changes === 1;
+}
+
+/**
+ * Marks a job as successfully completed.
+ *
+ * @param {string} id
+ */
+export function markCompleted(id) {
+  const now = new Date().toISOString();
+  db.prepare("UPDATE jobs SET state = 'completed', updated_at = ? WHERE id = ?").run(now, id);
+}
+
+/**
+ * Marks a job as failed. Increments the attempts counter so future
+ * retry/DLQ logic (Part 3) has accurate data to work with.
+ *
+ * @param {string} id
+ */
+export function markFailed(id) {
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE jobs SET state = 'failed', attempts = attempts + 1, updated_at = ? WHERE id = ?"
+  ).run(now, id);
+}

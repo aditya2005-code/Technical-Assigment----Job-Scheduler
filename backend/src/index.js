@@ -12,7 +12,8 @@
  */
 
 import { program } from 'commander';
-import { enqueueAction } from './commands/enqueue.js';
+import { enqueueAction }    from './commands/enqueue.js';
+import { workerStartAction } from './commands/worker.js';
 
 program
   .name('queuectl')
@@ -29,6 +30,21 @@ Examples:
   ✓ Job job1 added successfully.
   `)
   .action(enqueueAction);
+
+// ── worker command ────────────────────────────────────────────────
+const worker = program
+  .command('worker')
+  .description('Manage the job worker process');
+
+worker
+  .command('start')
+  .description('Start the worker polling loop')
+  .addHelpText('after', `
+Examples:
+  $ node src/index.js worker start
+  Worker started...
+  `)
+  .action(workerStartAction);
 
 // Parse process.argv — Commander reads process.argv[2..] by default.
 program.parse(process.argv);
