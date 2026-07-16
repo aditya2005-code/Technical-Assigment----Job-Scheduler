@@ -10,6 +10,7 @@
 import { CONFIG } from '../config/config.js';
 import { calculateBackoffDelay } from '../utils/backoff.js';
 import * as jobRepository from '../repositories/jobRepository.js';
+import * as dlqService   from './dlqService.js';
 
 /**
  * Handles a job failure by incrementing its attempt count and scheduling
@@ -40,6 +41,13 @@ export function handleFailure(job) {
     return true;
   } else {
     console.log('Retries exhausted.');
+    // Move job directly to Dead Letter Queue (DLQ) state
+    try {
+      dlqService.moveToDead(job.id);
+      console.log(`Job ${job.id} moved to DLQ (state = 'dead').`);
+    } catch (err) {
+      console.error(`Failed to move job to DLQ: ${err.message}`);
+    }
     return false;
   }
 }

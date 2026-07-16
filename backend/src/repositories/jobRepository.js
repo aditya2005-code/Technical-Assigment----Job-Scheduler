@@ -193,3 +193,53 @@ export function resetToPending(id) {
   ).run(now, id);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DLQ repository methods — added in Part 4
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns all jobs in 'dead' state.
+ *
+ * @returns {Job[]}
+ */
+export function findDeadJobs() {
+  const rows = db.prepare("SELECT * FROM jobs WHERE state = 'dead' ORDER BY updated_at ASC").all();
+  return rows.map((row) => new Job(row));
+}
+
+/**
+ * Transition a job to 'dead' state and reset next_retry_at.
+ *
+ * @param {string} id
+ */
+export function moveToDead(id) {
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE jobs SET state = 'dead', next_retry_at = NULL, updated_at = ? WHERE id = ?"
+  ).run(now, id);
+}
+
+/**
+ * Reset attempts to 0, state to pending, and clear next_retry_at for manual DLQ retry.
+ *
+ * @param {string} id
+ */
+export function resetDeadJob(id) {
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE jobs SET state = 'pending', attempts = 0, next_retry_at = NULL, updated_at = ? WHERE id = ?"
+  ).run(now, id);
+}
+
+/**
+ * Find a job by id but only if its state is 'dead'.
+ *
+ * @param {string} id
+ * @returns {Job|null}
+ */
+export function findDeadJobById(id) {
+  const row = db.prepare("SELECT * FROM jobs WHERE id = ? AND state = 'dead'").get(id);
+  return row ? new Job(row) : null;
+}
+
+

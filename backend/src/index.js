@@ -14,6 +14,7 @@
 import { program } from 'commander';
 import { enqueueAction }    from './commands/enqueue.js';
 import { workerStartAction } from './commands/worker.js';
+import { dlqListAction, dlqRetryAction } from './commands/dlq.js';
 
 program
   .name('queuectl')
@@ -45,6 +46,21 @@ Examples:
   Worker started...
   `)
   .action(workerStartAction);
+
+// ── dlq command ───────────────────────────────────────────────────
+const dlq = program
+  .command('dlq')
+  .description('Manage the Dead Letter Queue (DLQ)');
+
+dlq
+  .command('list')
+  .description('List all dead jobs in the Dead Letter Queue')
+  .action(dlqListAction);
+
+dlq
+  .command('retry <jobId>')
+  .description('Manually retry a dead job by resetting it to pending')
+  .action(dlqRetryAction);
 
 // Parse process.argv — Commander reads process.argv[2..] by default.
 program.parse(process.argv);
