@@ -22,7 +22,9 @@ import { dirname, join } from 'path';
 // of the cwd from which the CLI is invoked.
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const DB_PATH    = join(__dirname, '..', '..', 'queue.db');
+const isTest = process.env.NODE_ENV === 'test';
+const DB_FILE = isTest ? 'queue_test.db' : 'queue.db';
+const DB_PATH = join(__dirname, '..', '..', DB_FILE);
 const SCHEMA_PATH = join(__dirname, 'schema.sql');
 
 // Open (or create) the database file.

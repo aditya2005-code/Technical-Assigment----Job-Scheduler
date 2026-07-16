@@ -25,9 +25,11 @@ export function handleFailure(job) {
   const newAttempts = jobRepository.markFailed(job.id);
 
   // 2. Check if attempts exceed the configured threshold.
-  const maxRetries = job.max_retries !== undefined && job.max_retries !== null
+  // Respect job-specific override if it differs from the schema default (3)
+  const configMaxRetries = configService.getConfig('max-retries', 3);
+  const maxRetries = (job.max_retries !== undefined && job.max_retries !== null && job.max_retries !== 3)
     ? job.max_retries
-    : configService.getConfig('max-retries', 3);
+    : configMaxRetries;
 
   if (newAttempts <= maxRetries) {
     // Calculate exponential delay: delay = BACKOFF_BASE ^ attempts
