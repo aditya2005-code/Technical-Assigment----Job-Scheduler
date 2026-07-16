@@ -52,7 +52,7 @@ export async function start() {
 
   while (!isShuttingDown()) {
     try {
-      const didWork = processNextJob();
+      const didWork = await processNextJob();
 
       if (!didWork) {
         // Queue was empty — log once then sleep to avoid busy-waiting.

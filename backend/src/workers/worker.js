@@ -27,10 +27,10 @@ import { execute }         from './executor.js';
  *  3. Execute its shell command.
  *  4. Update state to completed or failed.
  *
- * @returns {boolean} true if a job was found and processed,
- *                    false if the queue was empty.
+ * @returns {Promise<boolean>} true if a job was found and processed,
+ *                             false if the queue was empty.
  */
-export function processNextJob() {
+export async function processNextJob() {
   // 1. Peek at the oldest pending job.
   const job = jobRepository.getNextPendingJob();
 
@@ -49,7 +49,7 @@ export function processNextJob() {
   console.log(`⚙  Processing job ${job.id}...`);
 
   // 3. Execute the shell command captured in the job.
-  const result = execute(job.command);
+  const result = await execute(job.command);
 
   // 4. Persist the outcome.
   if (result.success) {
