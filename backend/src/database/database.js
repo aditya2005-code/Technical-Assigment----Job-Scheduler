@@ -40,4 +40,16 @@ db.pragma('foreign_keys = ON');
 const schema = readFileSync(SCHEMA_PATH, 'utf8');
 db.exec(schema);
 
+// Migration: Safely add next_retry_at column to jobs table if it was
+// created in Part 1 or Part 2.
+try {
+  db.prepare('ALTER TABLE jobs ADD COLUMN next_retry_at TEXT NULL').run();
+} catch (err) {
+  // If the column already exists, SQLite will throw an error:
+  // "duplicate column name: next_retry_at". We ignore this safely.
+  if (!err.message.includes('duplicate column name')) {
+    throw err;
+  }
+}
+
 export default db;

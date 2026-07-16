@@ -120,14 +120,76 @@ export function markCompleted(id) {
 }
 
 /**
- * Marks a job as failed. Increments the attempts counter so future
- * retry/DLQ logic (Part 3) has accurate data to work with.
+ * Marks a job as failed. Increments the attempts counter and returns the new count.
  *
  * @param {string} id
+ * @returns {number} The updated attempts count.
  */
 export function markFailed(id) {
   const now = new Date().toISOString();
   db.prepare(
     "UPDATE jobs SET state = 'failed', attempts = attempts + 1, updated_at = ? WHERE id = ?"
   ).run(now, id);
+
+  const row = db.prepare("SELECT attempts FROM jobs WHERE id = ?").get(id);
+  return row ? row.attempts : 0;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Retry repository methods — added in Part 3
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Increments the attempt count for a job and returns the new count.
+ *
+ * @param {string} id
+ * @returns {number} The updated attempts count.
+ */
+export function incrementAttempts(id) {
+  const now = new Date().toISOString();
+  // Increment attempt counter in the database
+  db.prepare("UPDATE jobs SET attempts = attempts + 1, updated_at = ? WHERE id = ?").run(now, id);
+
+  // Retrieve the updated count to return to the service layer
+  const row = db.prepare("SELECT attempts FROM jobs WHERE id = ?").get(id);
+  return row ? row.attempts : 0;
+}
+
+/**
+ * Schedules a retry for a job by updating its state and next_retry_at timestamp.
+ *
+ * @param {string} id
+ * @param {string} nextRetryAt - ISO-8601 timestamp of when to retry the job.
+ */
+export function scheduleRetry(id, nextRetryAt) {
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE jobs SET state = 'failed', next_retry_at = ?, updated_at = ? WHERE id = ?"
+  ).run(nextRetryAt, now, id);
+}
+
+/**
+ * Finds all jobs currently in 'failed' state whose scheduled retry time has passed.
+ *
+ * @param {string} now - Current ISO-8601 timestamp.
+ * @returns {Job[]} List of jobs ready to be retried.
+ */
+export function findRetryableJobs(now) {
+  const rows = db
+    .prepare("SELECT * FROM jobs WHERE state = 'failed' AND next_retry_at <= ? ORDER BY next_retry_at ASC")
+    .all(now);
+  return rows.map((row) => new Job(row));
+}
+
+/**
+ * Resets a job back to 'pending' state so it can be picked up by workers.
+ *
+ * @param {string} id
+ */
+export function resetToPending(id) {
+  const now = new Date().toISOString();
+  db.prepare(
+    "UPDATE jobs SET state = 'pending', next_retry_at = NULL, updated_at = ? WHERE id = ?"
+  ).run(now, id);
+}
+

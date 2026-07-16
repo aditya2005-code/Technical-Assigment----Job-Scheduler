@@ -23,6 +23,7 @@
 import { processNextJob }          from '../workers/worker.js';
 import { isShuttingDown,
          registerShutdownHandlers } from '../workers/shutdown.js';
+import * as retryService           from './retryService.js';
 import { WORKER }                  from '../utils/constants.js';
 
 /**
@@ -52,6 +53,9 @@ export async function start() {
 
   while (!isShuttingDown()) {
     try {
+      // Run the scheduler tick to process and reset retryable failed jobs back to pending
+      retryService.processScheduledRetries();
+
       const didWork = await processNextJob();
 
       if (!didWork) {

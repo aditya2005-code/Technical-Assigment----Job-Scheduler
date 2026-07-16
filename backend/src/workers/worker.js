@@ -16,6 +16,7 @@
 
 import * as jobRepository from '../repositories/jobRepository.js';
 import * as lockService    from '../services/lockService.js';
+import * as retryService   from '../services/retryService.js';
 import { execute }         from './executor.js';
 
 /**
@@ -57,9 +58,12 @@ export async function processNextJob() {
     console.log(`✓ Job ${job.id} completed.`);
     if (result.stdout) console.log(`   stdout: ${result.stdout}`);
   } else {
-    jobRepository.markFailed(job.id);
     console.error(`✗ Job ${job.id} failed (exit ${result.exitCode}).`);
     if (result.stderr) console.error(`   stderr: ${result.stderr}`);
+    
+    // Delegate to retryService to check retries, increment attempts,
+    // and schedule backoff if allowed.
+    retryService.handleFailure(job);
   }
 
   lockService.unlockJob(job.id); // no-op today; keeps the contract intact
