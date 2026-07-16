@@ -1,5 +1,18 @@
 {
+  "name": "queuectl",
+  "version": "1.0.0",
+  "description": "Production-quality CLI job queue manager backed by SQLite",
+  "type": "module",
+  "bin": {
+    "queuectl": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
   "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "commander": "^13.1.0",
     "express": "^5.2.1"
   }
 }
