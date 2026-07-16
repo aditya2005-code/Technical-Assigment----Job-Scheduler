@@ -15,6 +15,8 @@ import { program } from 'commander';
 import { enqueueAction }    from './commands/enqueue.js';
 import { workerStartAction } from './commands/worker.js';
 import { dlqListAction, dlqRetryAction } from './commands/dlq.js';
+import { statusAction }     from './commands/status.js';
+import { listAction }       from './commands/list.js';
 
 program
   .name('queuectl')
@@ -63,6 +65,19 @@ dlq
   .command('retry <jobId>')
   .description('Manually retry a dead job by resetting it to pending')
   .action(dlqRetryAction);
+
+// ── status command ────────────────────────────────────────────────
+program
+  .command('status')
+  .description('Display a summary of the queue status')
+  .action(statusAction);
+
+// ── list command ──────────────────────────────────────────────────
+program
+  .command('list')
+  .description('List jobs from the queue')
+  .option('-s, --state <state>', 'filter jobs by state (pending, processing, completed, failed, dead)')
+  .action(listAction);
 
 // Parse process.argv — Commander reads process.argv[2..] by default.
 program.parse(process.argv);

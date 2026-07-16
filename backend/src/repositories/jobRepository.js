@@ -242,4 +242,65 @@ export function findDeadJobById(id) {
   return row ? new Job(row) : null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Status & List repository methods — added in Part 6
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns counts of jobs grouped by state using a single query.
+ *
+ * @returns {object} Map of state -> count
+ */
+export function countByState() {
+  const row = db.prepare(`
+    SELECT
+      SUM(CASE WHEN state = 'pending' THEN 1 ELSE 0 END) AS pending,
+      SUM(CASE WHEN state = 'processing' THEN 1 ELSE 0 END) AS processing,
+      SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed,
+      SUM(CASE WHEN state = 'failed' THEN 1 ELSE 0 END) AS failed,
+      SUM(CASE WHEN state = 'dead' THEN 1 ELSE 0 END) AS dead
+    FROM jobs
+  `).get();
+
+  return {
+    pending:    row.pending || 0,
+    processing: row.processing || 0,
+    completed:  row.completed || 0,
+    failed:     row.failed || 0,
+    dead:       row.dead || 0,
+  };
+}
+
+/**
+ * Returns total count of all jobs in the queue.
+ *
+ * @returns {number}
+ */
+export function countAllJobs() {
+  const row = db.prepare('SELECT COUNT(*) AS total FROM jobs').get();
+  return row ? row.total : 0;
+}
+
+/**
+ * Returns all jobs in the database.
+ *
+ * @returns {Job[]}
+ */
+export function findJobs() {
+  const rows = db.prepare('SELECT * FROM jobs ORDER BY created_at DESC').all();
+  return rows.map((row) => new Job(row));
+}
+
+/**
+ * Returns jobs filtered by state.
+ *
+ * @param {string} state
+ * @returns {Job[]}
+ */
+export function findJobsByState(state) {
+  const rows = db.prepare('SELECT * FROM jobs WHERE state = ? ORDER BY created_at DESC').all(state);
+  return rows.map((row) => new Job(row));
+}
+
+
 
